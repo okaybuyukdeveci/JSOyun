@@ -1,0 +1,530 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Çiftlik Savunması</title>
+  <style>
+  /* Sayfa genelinde margin sıfırlanıyor, taşma engelleniyor ve koyu bir arka plan rengi atanıyor */
+    body { 
+      margin: 0;
+      overflow: hidden;
+      background: #222;
+    }
+      /* Canvas oyun alanı tam ekran kaplayacak şekilde ayarlanıyor */
+    canvas {
+      display: block;
+      background-color: #71c837;
+    }
+    /* Sağ üst köşedeki yeniden başlatma butonu stilleri */
+    #restartButtonTop {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+      padding: 8px 12px;
+      font-size: 16px;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    /* Oyun Bitti ekranı stilleri */
+    #gameOverScreen {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 30px 50px;
+      font-size: 24px;
+      border-radius: 8px;
+      text-align: center;
+      display: none;
+      z-index: 100;
+    }
+    
+    /* Oyun Bitti ekranı içindeki buton stilleri */
+    #gameOverScreen button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+    <!-- Sağ üst köşede yer alan "Yeniden Başlat" butonu -->
+  <button id="restartButtonTop">Yeniden Başlat</button>
+
+    <!-- Oyun bittiğinde gösterilecek ekran -->
+  <div id="gameOverScreen">
+    <p>Oyun Bitti! Tüm koyunlar öldü.</p>
+    <button id="restartButtonGameOver">Tekrar Oyna</button>
+  </div>
+
+    <!-- Oyun alanı olarak kullanılan canvas -->
+  <canvas id="gameCanvas"></canvas>
+    <!-- Arka plan müziği -->
+<audio id="bgMusic" src="assets/Mice On Venus.mp3" loop></audio>
+  <!-- Köpek havlama sesi -->
+<audio id="barkSound" src="assets/Dog Woof Sound Effect.mp3"></audio>
+
+
+  <script>
+        // Canvas elementini ve çizim bağlamını (2D) alıyoruz
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+        // Oyun karakterlerinin ve nesnelerinin resimlerini yüklüyoruz
+    const dogImg = new Image();
+    dogImg.src = 'assets/Dog.gif';
+
+    const sheepImg = new Image();
+    sheepImg.src = 'assets/sheep.png';
+
+    const wolfImg = new Image();
+    wolfImg.src = 'assets/Wolf.png';
+
+    const treeImage = new Image();
+    treeImage.src = 'assets/Tree.png';
+   
+    // Buton ve oyun bitti ekranı elementlerine referans alıyoruz
+    const restartButtonTop = document.getElementById('restartButtonTop');
+    const restartButtonGameOver = document.getElementById('restartButtonGameOver');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+
+    // Arka plan müziği ve köpek havlama sesi elementlerini alıyoruz
+const bgMusic = new Audio('assets/Mice On Venus.mp3');
+const barkSound = document.getElementById('barkSound');
+
+bgMusic.loop = true;     // Müziği döngüye al
+bgMusic.volume = 0.5;    // Ses seviyesi (0.0 - 1.0 arası)
+
+// Ağaçların tutulacağı boş dizi (oyun alanına ağaçlar eklemek için)
+    let trees = [];
+    let timer = 120; // saniye cinsinden sayaç (2 dakika)
+    let gameTime = 120;  // Süre saniye cinsinden, örn: 120s = 2 dakika
+let lastTimee = 0;    // Zaman hesaplamak için
+
+function updateTimer(dt) {
+  if (isGameOver) return;   // Oyun bitmişse timer durur
+  gameTime -= dt / 1000;   // dt milisaniye, saniyeye çevirdik
+  if (gameTime <= 0) {
+    gameTime = 0;
+    if (sheeps.length > 0) {
+      showWinScreen();    // Süre bitti, koyunlar hala hayattaysa kazandın
+    }
+  }
+}
+
+
+function drawTimer() {
+  ctx.fillStyle = 'black';
+  ctx.font = '20px Arial';
+  ctx.fillText(`Kalan Süre: ${Math.ceil(gameTime)}s`, 20, 60);
+}
+
+let isGameWon = false; // kazanma durumu
+
+
+    // Üstteki "Yeniden Başlat" butonuna tıklanınca çalışacak fonksiyon
+    restartButtonTop.addEventListener('click', () => {
+      isGameOver = false;
+      gameOverScreen.style.display = 'none';
+      resetGame();
+      bgMusic.play();  // Müziği başlat
+
+    });
+
+// Oyun bitti ekranındaki "Tekrar Oyna" butonuna tıklanınca çalışacak fonksiyon
+    restartButtonGameOver.addEventListener('click', () => {
+      isGameOver = false;
+      gameOverScreen.style.display = 'none';
+      resetGame();
+        bgMusic.play();  // Müziği başlat
+
+    });
+
+    // Oyun bittiğinde çağrılan ve oyun bitti ekranını gösteren fonksiyon
+    function showGameOverScreen() {
+      isGameOver = true;
+  isGameWon = false;
+  gameOverScreen.style.display = 'block';
+  gameOverScreen.querySelector('p').textContent = 'Oyun Bitti! Tüm koyunlar öldü.';
+  restartButtonGameOver.textContent = 'Tekrar Oyna';
+    }
+// Canvas boyutlarını pencere boyutuna göre ayarlayan fonksiyon
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    // Pencere yeniden boyutlandırıldığında canvas'ı da güncelle
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+
+// Havlama durumunu tutan değişken (köpek şu an havlıyor mu?)
+    let isBarking = false;
+    // Önceki frame zamanını tutan değişken (animasyon için)
+    let lastTime = 0;
+    // Oyunun bittiğini tutan bayrak
+    let isGameOver = false;
+
+
+// Köpek objesi, başlangıç pozisyonu ve özellikleri
+    const dog = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      size: 50,
+      speed: 400
+    };
+
+    // Klavye tuşlarının durumunu tutan nesne, başlangıçta tüm tuşlar basılmamış (false)
+    const keys = { w: false, a: false, s: false, d: false };
+    // Klavyeden bir tuşa basıldığında, eğer ilgili tuş w,a,s,d ise durumunu true yap
+    window.addEventListener('keydown', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; });
+    // Klavyeden bir tuş bırakıldığında, eğer ilgili tuş w,a,s,d ise durumunu false yap
+    window.addEventListener('keyup', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+
+    // Oyun sahnesinde olacak koyun sayısı sabiti
+    const SHEEP_COUNT = 70;
+    // Koyunları tutacak dizi
+    const sheeps = [];
+    // Kurtları tutacak dizi
+    const wolves = [];
+// Koyun sınıfı, her koyun için konum, hız, boyut ve davranış özelliklerini içerir
+    class Sheep {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 28;
+        this.speed = 100 + Math.random() * 40;
+        this.vx = (Math.random() - 0.5) * this.speed;
+        this.vy = (Math.random() - 0.5) * this.speed;
+        this.panic = false;
+        this.nearWolfDuration = 0;
+        this.dead = false;
+      }
+  // Koyunun her frame güncelleme fonksiyonu
+      update(dt, wolves) {
+        const moveAmount = dt / 1000;
+        if (this.dead) return;// Eğer koyun öldüyse hareket etme, fonksiyondan çık
+        
+        // Kurt yakın mı kontrolü için bayrak
+        let nearWolf = false;
+        
+        // Kurtlar arasında dolaş, koyuna yakın olan varsa panik moduna geçir
+        for (const wolf of wolves) {
+          const dx = this.x - wolf.x;
+          const dy = this.y - wolf.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 250) { // Eğer kurt 250 pikselden yakınsa
+            nearWolf = true;
+            const angle = Math.atan2(dy, dx);
+            this.vx += Math.cos(angle) * 100 * moveAmount;
+            this.vy += Math.sin(angle) * 100 * moveAmount;
+          }
+        }
+
+        if (nearWolf) {
+          this.panic = true; // Kurt yakın, panik başlasın
+          this.nearWolfDuration += moveAmount;  // Kurt yakın kalma süresini artır
+          if (this.nearWolfDuration >= 6) {
+            this.dead = true;
+            return;
+          }
+          // Panik durumunda koyunun maksimum hızı 150 piksel/saniye olsun
+          const maxSpeed = 150;
+          const speed = Math.hypot(this.vx, this.vy);
+          if (speed > maxSpeed) {
+            this.vx = (this.vx / speed) * maxSpeed;
+            this.vy = (this.vy / speed) * maxSpeed;
+          }
+        } else {        // Kurt yakın değil, panik süresi sıfırlanır
+          this.nearWolfDuration = 0;
+          if (this.panic) {          // Panik sona eriyor, hızlar yavaşça azalır
+            this.vx *= 0.95;
+            this.vy *= 0.95;
+            if (Math.abs(this.vx) < 5 && Math.abs(this.vy) < 5) {
+              this.panic = false;
+              this.vx = (Math.random() - 0.5) * this.speed;
+              this.vy = (Math.random() - 0.5) * this.speed;
+            }
+          } else {          // Normal durumda hızda küçük rastgele hareketler yapar
+            this.vx += (Math.random() - 0.5) * 20 * moveAmount;
+            this.vy += (Math.random() - 0.5) * 20 * moveAmount;
+          }
+          // Normal maksimum hız koyunun temel hızına eşit olur
+          const maxSpeed = this.speed;
+          const speed = Math.hypot(this.vx, this.vy);
+          if (speed > maxSpeed) {
+            this.vx = (this.vx / speed) * maxSpeed;
+            this.vy = (this.vy / speed) * maxSpeed;
+          }
+        }
+    // Koyunun pozisyonunu hıza göre güncelle
+        this.x += this.vx * moveAmount;
+        this.y += this.vy * moveAmount;
+    // Koyun ekran dışına çıkmasın, sınırları kontrol et
+        if (this.x < this.size / 2) { this.x = this.size / 2; this.vx *= -1; }
+        if (this.x > canvas.width - this.size / 2) { this.x = canvas.width - this.size / 2; this.vx *= -1; }
+        if (this.y < this.size / 2) { this.y = this.size / 2; this.vy *= -1; }
+        if (this.y > canvas.height - this.size / 2) { this.y = canvas.height - this.size / 2; this.vy *= -1; }
+      }
+// Koyunun kendini çizme fonksiyonu
+      draw(ctx) {
+        if (this.dead) return;
+        ctx.drawImage(sheepImg, this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+          // Panik durumundaysa üzerine kırmızı yarı saydam bir daire çiz
+        if (this.panic) {
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size/2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+// Kurt sınıfı, kurtun hareketi ve çizimi
+    class Wolf {
+      constructor() {
+        this.size = 40;
+        this.speed = 100 + Math.random() * 50;
+        this.barkCount = 0;
+        this.scared = false;
+
+        // Kurtun sahneye giriş yönünü rastgele belirle
+        const side = Math.floor(Math.random() * 4);
+        if (side === 0) { this.x = -this.size; this.y = Math.random() * canvas.height; this.vx = this.speed; this.vy = 0; }
+        else if (side === 1) { this.x = canvas.width + this.size; this.y = Math.random() * canvas.height; this.vx = -this.speed; this.vy = 0; }
+        else if (side === 2) { this.x = Math.random() * canvas.width; this.y = -this.size; this.vx = 0; this.vy = this.speed; }
+        else { this.x = Math.random() * canvas.width; this.y = canvas.height + this.size; this.vx = 0; this.vy = -this.speed; }
+
+        this.outOfScreen = false;
+      }
+  // Her frame kurtun hareketini güncelle
+      update(dt) {
+        const moveAmount = dt / 1000;
+        if (this.scared) {
+                // Korkmuş kurt köpekten kaçmaya çalışır
+          const escapeSpeed = 400;
+          const dx = this.x - dog.x;
+          const dy = this.y - dog.y;
+          const dist = Math.hypot(dx, dy) || 1;
+          this.vx = (dx / dist) * escapeSpeed;
+          this.vy = (dy / dist) * escapeSpeed;
+        } else {
+                // Koyunlardan en yakınına yönel
+          let closestSheep = null;
+          let minDist = Infinity;
+          for (const sheep of sheeps) {
+            if (sheep.dead) continue;
+            const dx = sheep.x - this.x;
+            const dy = sheep.y - this.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < minDist) {
+              minDist = dist;
+              closestSheep = sheep;
+            }
+          }
+              // En yakın koyun varsa ona doğru yönel
+          if (closestSheep) {
+            const dx = closestSheep.x - this.x;
+            const dy = closestSheep.y - this.y;
+            const dist = Math.hypot(dx, dy) || 1;
+            this.vx = (dx / dist) * this.speed;
+            this.vy = (dy / dist) * this.speed;
+          }
+        }
+    // Kurtun konumunu hız vektörüyle güncelle
+        this.x += this.vx * moveAmount;
+        this.y += this.vy * moveAmount;
+    // Eğer kurt ekran dışına çıkmışsa bayrağı işaretle
+        if (this.x < -this.size || this.x > canvas.width + this.size || this.y < -this.size || this.y > canvas.height + this.size) {
+          this.outOfScreen = true;
+        }
+      }
+  // Kurtu çiz (görseli ortalayarak çiz)
+      draw(ctx) {
+        ctx.drawImage(wolfImg, this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+      }
+    }
+// Kullanıcı mouse sol tuşuna bastığında havlama başlat
+    canvas.addEventListener('mousedown', e => {
+      if (e.button === 0) {
+        isBarking = true;
+         barkSound.currentTime = 0; // aynı sesi tekrar çalabilmek için başa al
+    barkSound.play();
+        // Kurtlar köpeğin havlamasına tepki verir
+        wolves.forEach(wolf => {
+          const dx = wolf.x - dog.x;
+          const dy = wolf.y - dog.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 200 && !wolf.scared) {
+            wolf.barkCount = (wolf.barkCount || 0) + 1;
+            if (wolf.barkCount >= 3) wolf.scared = true;
+          }
+        });
+      }
+    });
+    // Mouse tuşunu bıraktığında havlamayı durdur
+    canvas.addEventListener('mouseup', e => { if (e.button === 0) isBarking = false; });
+
+// Kurtları ekrana çıkaran fonksiyon
+    function spawnWolves() {
+      const count = 2 + Math.floor(Math.random() * 2);
+      for (let i=0; i<count; i++) wolves.push(new Wolf());
+    }
+    spawnWolves();
+    setInterval(spawnWolves, 10000);
+
+// Oyunun güncelleme fonksiyonu (hareket ve kontrol)
+    function update(dt) {
+      if (isGameOver) return;
+
+        // timer güncellemesi (saniye cinsine çevirelim)
+  timer -= dt / 1000;
+  if (timer < 0) timer = 0;
+
+        // Köpeğin hızına göre konumunu güncelle (tuşlara basılıysa)
+      const moveAmount = (dog.speed * dt) / 1000;
+      if (keys.w) dog.y -= moveAmount;
+      if (keys.s) dog.y += moveAmount;
+      if (keys.a) dog.x -= moveAmount;
+      if (keys.d) dog.x += moveAmount;
+        // Köpeği ekranın dışına çıkmaktan koru
+      dog.x = Math.max(dog.size/2, Math.min(canvas.width - dog.size/2, dog.x));
+      dog.y = Math.max(dog.size/2, Math.min(canvas.height - dog.size/2, dog.y));
+  // Koyunları güncelle
+      sheeps.forEach(sheep => sheep.update(dt, wolves));
+        // Ölü koyunları listeden çıkar
+      for (let i=sheeps.length-1; i>=0; i--) {
+        if (sheeps[i].dead) sheeps.splice(i, 1);
+      }
+        // Kurtları güncelle, ekran dışına çıkan kurtları sil
+      wolves.forEach((wolf, i) => { wolf.update(dt); if (wolf.outOfScreen) wolves.splice(i,1); });
+  // Tüm koyunlar öldüyse oyunu bitir
+      if (sheeps.length === 0) showGameOverScreen();
+
+        // Sayaç 0 ve koyunlar hayatta ise kazanma durumu
+  if (timer === 0 && sheeps.length > 0) {
+    showGameWinScreen();
+  }
+    }
+// Oyunu çizen fonksiyon
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);// Ekranı temizle
+  // Ağaçları çiz
+      trees.forEach(tree => {
+        ctx.drawImage(treeImage, tree.x - 20, tree.y - 20, 60, 60);
+      });
+// Koyunları, kurtları ve köpeği sırayla çiz
+      sheeps.forEach(sheep => sheep.draw(ctx));
+      wolves.forEach(wolf => wolf.draw(ctx));
+      ctx.drawImage(dogImg, dog.x - dog.size / 2, dog.y - dog.size / 2, dog.size, dog.size);
+
+  // Panik durumunu gösteren bar
+      const panicCount = sheeps.filter(s => s.panic).length;
+      const panicRatio = panicCount / SHEEP_COUNT;
+
+      ctx.fillStyle = '#444';
+      ctx.fillRect(20, 20, 200, 20);
+
+      ctx.fillStyle = 'red';
+      ctx.fillRect(20, 20, 200 * panicRatio, 20);
+
+      ctx.fillStyle = 'white';
+      ctx.font = '16px Arial';
+      ctx.fillText(`Panik Seviyesi: ${(panicRatio * 100).toFixed(0)}%`, 25, 36);
+
+      ctx.fillStyle = 'white';
+ctx.font = '20px Arial';
+ctx.fillText(`Kalan Süre: ${Math.ceil(timer)} saniye`, 25, 65);
+    }
+// Ana oyun döngüsü
+    function gameLoop(timestamp=0) {
+      const dt = timestamp - lastTimee;
+      lastTimee = timestamp;
+      update(dt);
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+// Oyunu baştan başlatan fonksiyon
+    function resetGame() {
+       timer = 120;
+  isGameWon = false;
+  isGameOver = false;
+      sheeps.length = 0;
+      for (let i=0; i < SHEEP_COUNT; i++) sheeps.push(new Sheep(Math.random() * canvas.width, Math.random() * canvas.height));
+      wolves.length = 0;
+      spawnWolves();
+      dog.x = canvas.width / 2;
+      dog.y = canvas.height / 2;
+      generateTrees();
+    }
+// Ağaçları rastgele oluşturan fonksiyon
+    function generateTrees() {
+      trees = [];
+      const treeCount = Math.floor(Math.random() * 6) + 25;
+      for (let i = 0; i < treeCount; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        trees.push({ x: x, y: y });
+      }
+    }
+    function showGameWinScreen() {
+  isGameWon = true;
+  isGameOver = true;
+  gameOverScreen.style.display = 'block';
+  gameOverScreen.querySelector('p').textContent = 'Tebrikler! Oyunu kazandınız!';
+  restartButtonGameOver.textContent = 'Yeniden Başlat';
+}
+function showWinScreen() {
+  isGameOver = true;              // Oyunu durdur
+  gameOverScreen.style.display = 'block';
+  gameOverScreen.innerHTML = `
+    <p>Kazandınız!</p>
+    <button id="restartButtonGameOver">Tekrar Oyna</button>
+  `;
+  document.getElementById('restartButtonGameOver').addEventListener('click', () => {
+    isGameOver = false;
+    gameOverScreen.style.display = 'none';
+    resetGame();
+    bgMusic.play();
+  });
+}
+
+
+// Görseller yüklenince başlatılacak fonksiyon
+    let imagesLoaded = 0;
+    const totalImages = 4;
+    function checkImagesLoaded() {
+      imagesLoaded++;
+      if (imagesLoaded === totalImages) {
+        resetGame();
+        requestAnimationFrame(gameLoop);
+      }
+    }
+    dogImg.onload = checkImagesLoaded;
+    sheepImg.onload = checkImagesLoaded;
+    wolfImg.onload = checkImagesLoaded;
+    treeImage.onload = checkImagesLoaded;
+
+resetGame();// Oyunu başlangıç durumuna getirir ve gerekli değişkenleri sıfırlar
+
+gameLoop();// Oyun döngüsünü başlatır, sürekli olarak ekranı günceller ve oyunu işler
+
+
+
+
+  </script>
+</body>
+</html>
