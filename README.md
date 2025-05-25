@@ -6,7 +6,7 @@ Oyunun gerçek adı BAAAH! olup, HTML5 ve CSS kullanılarak geliştirilmiş bir 
 ## Oyun Amacı
 Oyunun temel amacı, koyunların kurtlar tarafından avlanmasını önlemek ve çiftliği güvenli bir hale getirmektir. Bu amaca ulaşmak için oyuncu, köpeği yönlendirerek kurtları korkutup kaçırır ve koyunların güvenliğini sağlar.
 
-##🕹️ Kontroller
+## 🕹️ Kontroller
 W, A, S, D Tuşları: Köpeğin hareketini kontrol eder.
 
 Fare Sol Tıklama: Köpeğin havlayarak kurtları kovalamasını sağlar.
@@ -36,7 +36,9 @@ BAAAH!
 https://waterpouch.itch.io/baaah
 
 ##Youtube video linkleri
+
 https://youtu.be/5dH9JW80i30
+
 https://youtu.be/y74ofHo7bxA
 
 
