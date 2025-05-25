@@ -32,10 +32,10 @@ Kurt sprite:
 Koyun sprite: 
 
 ## 🔗 Gerçek Oyun URL'si ve Adı
-BAAAH!
-https://waterpouch.itch.io/baaah
 
-##Youtube video linkleri
+BAAAH!   https://waterpouch.itch.io/baaah
+
+## Youtube video linkleri
 
 https://youtu.be/5dH9JW80i30
 
