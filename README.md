@@ -1,4 +1,4 @@
-![oyun](https://github.com/user-attachments/assets/f48858b9-d774-4731-97d5-71e7fd8c9216)# JSOyun
+# JSOyun
 Oyunun gerçek adı BAAAH! olup, HTML5 ve CSS kullanılarak geliştirilmiş bir çiftlik simülasyon oyunudur. Oyun içerisinde koyun, kurt, köpek ve ağaç gibi temel unsurlar bulunmaktadır. Koyunlar serbestçe çiftlik alanında dolaşırken, beklenmedik anlarda ortaya çıkan kurtlar onları avlamaya çalışır. Oyuncu ise köpeği kontrol ederek kurtlara havlayarak saldırır ve onları çiftlikten uzaklaştırır. Bu şekilde koyunların zarar görmeden, korkmadan ve panik yapmadan yaşam alanlarında dolaşmaları sağlanır.
 
 ‼ Oyun URL'si: https://okaybuyukdeveci.github.io/JSOyun/
@@ -25,9 +25,9 @@ Arka plan sesi: https://www.youtube.com/watch?v=DZ47H84Bc_Q
 
 Köpek sprite: https://dadddydarko.itch.io/frost-dog-2d-sprite?download
 
-Kurt sprite:
-
 Ağaç sprite: https://engvee.itch.io/isometric-tree01?download
+
+Kurt sprite:
 
 Koyun sprite: 
 
