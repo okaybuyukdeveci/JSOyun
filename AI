@@ -1,0 +1,40 @@
+Bu showGameOverScreen ve resizeCanvas fonksiyonlarının HTML tarafında nasıl bir yapı kullanacağını açıklar mısın? Ne gibi HTML elementleri gerekir ve nasıl yerleştirilmeli?
+
+Cevap:
+
+“Elbette!
+
+showGameOverScreen fonksiyonu, bir game over ekranı (gameOverScreen ID’li <div>) ve bir restart butonu (restartButtonGameOver ID’li <button>) gerektirir.
+
+resizeCanvas fonksiyonu ise <canvas> elementini pencere boyutuna göre ayarlar.
+
+İşte örnek HTML yapısı:
+<div id="gameOverScreen" style="display: none;">
+  <p></p>
+  <button id="restartButtonGameOver">Tekrar Oyna</button>
+</div>
+
+<canvas id="canvas"></canvas>
+
+
+
+Koyunları sheeps dizisinde nasıl tutacağım? Her koyunun hangi özellikleri olacak ve bu dizi nasıl kullanılacak?
+
+Cevap:
+
+“Harika soru!
+
+sheeps dizisi, her koyunun pozisyonu, hızı gibi özelliklerini tutmak için kullanılır.
+
+Her koyun, genellikle bir nesne (object) olarak dizide yer alır.
+
+Örneğin:
+const sheeps = [];
+for (let i = 0; i < SHEEP_COUNT; i++) {
+  sheeps.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    speed: 1 + Math.random(),  // rastgele hız
+    direction: Math.random() * Math.PI * 2  // rastgele yön
+  });
+}
