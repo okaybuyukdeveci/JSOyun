@@ -38,3 +38,34 @@ for (let i = 0; i < SHEEP_COUNT; i++) {
     direction: Math.random() * Math.PI * 2  // rastgele yön
   });
 }
+
+
+
+Kazanan ekranı için JavaScript’te bir fonksiyon nasıl yazarım? Hangi adımları ve HTML etkileşimlerini içerir?
+
+“Harika soru!
+
+Kazanan ekranı için bir fonksiyon (showWinScreen) tanımlayabilirsin.
+
+Bu fonksiyon oyun bittiğinde çalışır ve ekrana ‘Kazandınız!’ yazısı ve bir buton ekler.
+
+İşte adım adım:
+
+1️⃣ Oyunu durdurmak için isGameOver = true yap.
+2️⃣ Kazanma ekranının (gameOverScreen) görünmesini sağla.
+3️⃣ HTML içeriğini ‘Kazandınız!’ mesajı ve ‘Tekrar Oyna’ butonuyla değiştir:
+
+
+gameOverScreen.innerHTML = `
+  <p>Kazandınız!</p>
+  <button id="restartButtonGameOver">Tekrar Oyna</button>
+`;
+4️⃣ Buton tıklanınca:
+
+Oyunu tekrar başlat (resetGame()).
+
+Ekranı gizle (display: none).
+
+Arka plan müziğini tekrar başlat.
+
+Böylece kazandığın zaman için dinamik bir ekran ve buton işlevselliği sağlarsın!” 🚀
